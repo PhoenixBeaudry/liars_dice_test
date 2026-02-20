@@ -426,7 +426,7 @@ def rollout_last_prompt_and_completion_parallelized_curriculum(
         "clobber": (700000000, 799999999),
     }
 
-    selected_game = "gin_rummy"
+    selected_game = "liars_dice"
 
     # --- 1. Static Initialization (Once per Rank) ---
     if not getattr(rollout_last_prompt_and_completion_parallelized_curriculum, "initialized", False):
@@ -504,7 +504,7 @@ def rollout_last_prompt_and_completion_parallelized_curriculum(
         use_hints = random.random() < current_hint_prob
 
         # --- Reset Environment (POST /reset) ---
-        payload = {"task_id": game_id, "seed": 42, "opponent": "mcts", "mcts_max_simulations": 25, "mcts_num_rollouts": 1}
+        payload = {"task_id": game_id, "seed": game_id, "opponent": "mcts", "mcts_max_simulations": 25, "mcts_num_rollouts": 1}
 
         try:
             reset_res = requests.post(f"{env_endpoint}/reset", json=payload, timeout=TIMEOUT)
@@ -525,11 +525,11 @@ def rollout_last_prompt_and_completion_parallelized_curriculum(
 
         # --- Build Conversation History ---
         # First make system prompt
-        system_prompt = "You are playing Gin Rummy.\n\n# Game Rules\nGIN RUMMY RULES:\nSetup: Standard 52-card deck. Each player starts with 10 cards.\nGoal: Form sets (3-4 of same rank) and runs (3+ consecutive cards of same suit) to minimize deadwood points.\n\nEach turn:\n1. Draw a card (from deck or discard pile)\n2. Discard a card to the discard pile\n3. Try to form melds (sets/runs) to reduce deadwood\n4. Knock when deadwood ≤ 10 points, or Gin when deadwood = 0\n\nScoring:\n- Gin (0 deadwood): 25 points + opponent's deadwood\n- Knock: Difference in deadwood (if you have less)\n- Undercut: Opponent wins if they have equal or less deadwood\n\nCard Values: Ace=1, 2-10=face value, Face cards=10\n\n# Output Format\nYou must respond with ONLY the action ID (a single number).\nDo NOT include descriptions or explanations.\n\nExamples:\n- For action \"0 -> draw from deck\": respond \"0\"\n- For action \"5 -> discard 7♠\": respond \"5\"\n- For action \"89 -> knock\": respond \"89\""
+        system_prompt = "You are playing Liar's Dice.\n\n# Game Rules\nLIAR'S DICE RULES:\nSetup: Each player has a cup and 5 six-sided dice. All dice are rolled secretly under cups each round.\nGoal: Win dice by correctly challenging bluffs and making valid bids until an opponent loses all dice.\n\nRound flow:\n1. All players roll their dice secretly and look at their own dice only.\n2. Starting player makes the first bid.\n3. On your turn, you must either:\n - Make a higher bid, OR\n - Call Liar (challenge the current bid)\n\nBids:\n- A bid is (quantity, face), meaning you claim there are at least 'quantity' dice showing 'face' among ALL players.\n- Each new bid must be strictly higher than the previous bid by either:\n - Increasing the quantity, OR\n - Keeping the quantity the same and increasing the face value.\n\nChallenge (Call Liar):\n- When a player calls Liar, all dice are revealed and counted.\n- If the bid is true (count >= quantity), the challenger loses one die.\n- If the bid is false (count < quantity), the bidder loses one die.\n- A new round begins with all remaining dice re-rolled.\n\nWilds (common variant):\n- 1s are wild and count as any face for bids of 2-6.\n- For bids on 1s, only 1s count (they are not wild for 1-bids).\n\n# Output Format\nYou must respond with ONLY the action ID (a single number).\nDo NOT include descriptions or explanations.\n\n"
 
         # Add suggestion for playing strategy based on curriculum
         if use_hints:
-            suggestion_prompt = "\n\n# Strategy Tips\n- Early game: Draw from deck to see more cards\n- Build runs and sets to reduce deadwood\n- Track opponent's discards to guess their hand\n- Knock when you have ≤10 deadwood points and think you're ahead\n- Go for Gin (0 deadwood) when close for bonus points"
+            suggestion_prompt = "\n\n# Strategy Tips\n- Early game: Make conservative bids to gather information about opponents’ likely dice distributions.\n- Use your own dice to anchor bids (bid faces you actually hold), and increment slowly when uncertain.\n- Watch opponents’ bidding patterns: fast raises often signal strength; hesitant/low raises can signal bluffing.\n- Apply pressure when your dice support a strong line—force opponents into uncomfortable jumps or a challenge.\n- Call Liar when the current bid is statistically unlikely given your dice and the bid size, especially after aggressive raises.\n- With wild 1s: remember bids on 2–6 are easier to satisfy; bids on 1s are harder and often good challenge points.\n- Endgame: when players have few dice, ranges tighten—bluffs get riskier and well-timed challenges become more valuable."
             system_prompt += suggestion_prompt
 
         messages = [{"role": "system", "content": system_prompt}]
@@ -714,7 +714,7 @@ def rollout_full_prompt_and_completion_parallelized_curriculum(
         "clobber": (700000000, 799999999),
     }
 
-    selected_game = "gin_rummy"
+    selected_game = "liars_dice"
 
     # --- 1. Static Initialization (Once per Rank) ---
     if not getattr(rollout_full_prompt_and_completion_parallelized_curriculum, "initialized", False):
@@ -825,11 +825,11 @@ def rollout_full_prompt_and_completion_parallelized_curriculum(
 
         # --- Build Conversation History ---
         # First make system prompt
-        system_prompt = "You are playing Gin Rummy.\n\n# Game Rules\nGIN RUMMY RULES:\nSetup: Standard 52-card deck. Each player starts with 10 cards.\nGoal: Form sets (3-4 of same rank) and runs (3+ consecutive cards of same suit) to minimize deadwood points.\n\nEach turn:\n1. Draw a card (from deck or discard pile)\n2. Discard a card to the discard pile\n3. Try to form melds (sets/runs) to reduce deadwood\n4. Knock when deadwood ≤ 10 points, or Gin when deadwood = 0\n\nScoring:\n- Gin (0 deadwood): 25 points + opponent's deadwood\n- Knock: Difference in deadwood (if you have less)\n- Undercut: Opponent wins if they have equal or less deadwood\n\nCard Values: Ace=1, 2-10=face value, Face cards=10\n\n# Output Format\nYou must respond with ONLY the action ID (a single number).\nDo NOT include descriptions or explanations.\n\nExamples:\n- For action \"0 -> draw from deck\": respond \"0\"\n- For action \"5 -> discard 7♠\": respond \"5\"\n- For action \"89 -> knock\": respond \"89\""
+        system_prompt = "You are playing Liar's Dice.\n\n# Game Rules\nLIAR'S DICE RULES:\nSetup: Each player has a cup and 5 six-sided dice. All dice are rolled secretly under cups each round.\nGoal: Win dice by correctly challenging bluffs and making valid bids until an opponent loses all dice.\n\nRound flow:\n1. All players roll their dice secretly and look at their own dice only.\n2. Starting player makes the first bid.\n3. On your turn, you must either:\n - Make a higher bid, OR\n - Call Liar (challenge the current bid)\n\nBids:\n- A bid is (quantity, face), meaning you claim there are at least 'quantity' dice showing 'face' among ALL players.\n- Each new bid must be strictly higher than the previous bid by either:\n - Increasing the quantity, OR\n - Keeping the quantity the same and increasing the face value.\n\nChallenge (Call Liar):\n- When a player calls Liar, all dice are revealed and counted.\n- If the bid is true (count >= quantity), the challenger loses one die.\n- If the bid is false (count < quantity), the bidder loses one die.\n- A new round begins with all remaining dice re-rolled.\n\nWilds (common variant):\n- 1s are wild and count as any face for bids of 2-6.\n- For bids on 1s, only 1s count (they are not wild for 1-bids).\n\n# Output Format\nYou must respond with ONLY the action ID (a single number).\nDo NOT include descriptions or explanations.\n\n"
 
         # Add suggestion for playing strategy based on curriculum
         if use_hints:
-            suggestion_prompt = "\n\n# Strategy Tips\n- Early game: Draw from deck to see more cards\n- Build runs and sets to reduce deadwood\n- Track opponent's discards to guess their hand\n- Knock when you have ≤10 deadwood points and think you're ahead\n- Go for Gin (0 deadwood) when close for bonus points"
+            suggestion_prompt = "\n\n# Strategy Tips\n- Early game: Make conservative bids to gather information about opponents’ likely dice distributions.\n- Use your own dice to anchor bids (bid faces you actually hold), and increment slowly when uncertain.\n- Watch opponents’ bidding patterns: fast raises often signal strength; hesitant/low raises can signal bluffing.\n- Apply pressure when your dice support a strong line—force opponents into uncomfortable jumps or a challenge.\n- Call Liar when the current bid is statistically unlikely given your dice and the bid size, especially after aggressive raises.\n- With wild 1s: remember bids on 2–6 are easier to satisfy; bids on 1s are harder and often good challenge points.\n- Endgame: when players have few dice, ranges tighten—bluffs get riskier and well-timed challenges become more valuable."
             system_prompt += suggestion_prompt
 
         messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": formatted_observation}]
