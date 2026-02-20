@@ -731,7 +731,7 @@ def rollout_full_prompt_and_completion_parallelized_curriculum(
             try:
                 print(f"[INIT] Initializing env on server {idx}: {base_url}")
                 # Initialize with a test reset to ensure server is ready
-                payload = {"task_id": games_to_task_id_range[selected_game][0], "seed": 42, "opponent": "mcts", "mcts_max_simulations": 25, "mcts_num_rollouts": 1}
+                payload = {"task_id": games_to_task_id_range[selected_game][0], "seed": games_to_task_id_range[selected_game][0], "opponent": "mcts", "mcts_max_simulations": 25, "mcts_num_rollouts": 1}
                 res = requests.post(f"{base_url}/reset", json=payload, timeout=300)
                 res.raise_for_status()
                 env_pool.append({"base_url": base_url})
@@ -804,7 +804,7 @@ def rollout_full_prompt_and_completion_parallelized_curriculum(
         use_hints = random.random() < current_hint_prob
 
         # --- Reset Environment (POST /reset) ---
-        payload = {"task_id": game_id, "seed": 42, "opponent": "mcts", "mcts_max_simulations": 25, "mcts_num_rollouts": 1}
+        payload = {"task_id": game_id, "seed": game_id, "opponent": "mcts", "mcts_max_simulations": 25, "mcts_num_rollouts": 1}
 
         try:
             reset_res = requests.post(f"{env_endpoint}/reset", json=payload, timeout=TIMEOUT)
